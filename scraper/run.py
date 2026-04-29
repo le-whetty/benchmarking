@@ -27,7 +27,15 @@ HISTORY_DIR = DATA_DIR / "listings_history"
 LISTINGS_FILE = DATA_DIR / "listings.json"
 REJECTED_FILE = DATA_DIR / "rejected.json"
 
-ALL_SOURCES = ["seek_nz", "seek_au", "linkedin"]
+ALL_SOURCES = [
+    "seek_nz",
+    "seek_au",
+    "linkedin",
+    "wellfound",
+    "hatch",
+    "working_in_tech",
+    "vc_boards",
+]
 
 
 def _load_source_module(name: str):
@@ -40,6 +48,18 @@ def _load_source_module(name: str):
     if name == "linkedin":
         from scraper.sources import linkedin
         return linkedin
+    if name == "wellfound":
+        from scraper.sources import wellfound
+        return wellfound
+    if name == "hatch":
+        from scraper.sources import hatch
+        return hatch
+    if name == "working_in_tech":
+        from scraper.sources import working_in_tech
+        return working_in_tech
+    if name == "vc_boards":
+        from scraper.sources import vc_boards
+        return vc_boards
     raise ValueError(f"Unknown source: {name!r}. Available: {ALL_SOURCES}")
 
 

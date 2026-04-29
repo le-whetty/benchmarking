@@ -67,7 +67,15 @@ make all          # scrape all sources, then start web server
 | `make web` | Start React dev server at localhost:5173 |
 | `make scrape` | Run all scrapers |
 | `make scrape SOURCE=seek_nz` | Run one scraper |
-| `make scrape SOURCE=seek_nz,seek_au` | Run multiple scrapers |
+| `make scrape SOURCE=hatch,vc_boards` | Run multiple scrapers |
+| `make scrape-startup` | All startup/tech sources only (no Seek) |
+| `make scrape-nz` | Seek NZ only |
+| `make scrape-au` | Seek AU only |
+| `make scrape-linkedin` | LinkedIn only |
+| `make scrape-wellfound` | Wellfound only |
+| `make scrape-hatch` | Hatch only |
+| `make scrape-working-in-tech` | Working In Tech NZ only |
+| `make scrape-vc` | All VC boards (Blackbird + AirTree + Icehouse) |
 | `make all` | Scrape then start web server |
 | `make rejected` | Print rejected listings with reasons |
 | `make install` | pip install scraper dependencies |
@@ -75,11 +83,27 @@ make all          # scrape all sources, then start web server
 
 ## Sources
 
-| Source | ID | Notes |
+| Source | ID | Requires Playwright | Notes |
+|---|---|---|---|
+| Seek NZ | `seek_nz` | No | seek.co.nz, HTML + JSON blob |
+| Seek AU | `seek_au` | No | seek.com.au, HTML + JSON blob |
+| LinkedIn | `linkedin` | Yes | Public search, JS-rendered |
+| Wellfound | `wellfound` | Yes | wellfound.com (AngelList), startup-heavy, often USD |
+| Hatch | `hatch` | No | hatch.team, NZ startup board, high salary disclosure |
+| Working In Tech NZ | `working_in_tech` | No | workingintech.co.nz, tech community board |
+| VC Boards | `vc_boards` | No | Blackbird + AirTree + Icehouse portfolio boards |
+
+### VC boards detail
+
+The `vc_boards` source scrapes Pallet-hosted job boards for three ANZ VC firms:
+
+| VC Firm | Board URL | Country focus |
 |---|---|---|
-| Seek NZ | `seek_nz` | seek.co.nz, HTML scraping |
-| Seek AU | `seek_au` | seek.com.au, HTML scraping |
-| LinkedIn | `linkedin` | Public search via Playwright |
+| Blackbird Ventures | jobs.blackbird.vc | AU (some NZ) |
+| AirTree Ventures | jobs.airtree.vc | AU |
+| Icehouse Ventures | jobs.icehouse.co.nz | NZ |
+
+To add another VC board, edit the `vc_boards.VC_BOARDS` list in `scraper/sources/vc_boards.py` (or `scraper/companies.json` for reference). No other changes needed.
 
 ## Adding a new source
 

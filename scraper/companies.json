@@ -1,5 +1,36 @@
 {
   "_comment": "Known ANZ SaaS/tech companies that often post comp on their careers pages. Add more as you discover them.",
+
+  "vc_boards": {
+    "_comment": "VC portfolio job boards. Scraped by sources/vc_boards.py. Add new boards here to extend coverage.",
+    "boards": [
+      {
+        "name": "blackbird",
+        "base_url": "https://jobs.blackbird.vc",
+        "search_path": "/jobs?search={query}",
+        "country": "AU",
+        "platform": "pallet",
+        "notes": "Blackbird Ventures portfolio — primarily AU but some NZ co's"
+      },
+      {
+        "name": "airtree",
+        "base_url": "https://jobs.airtree.vc",
+        "search_path": "/jobs?search={query}",
+        "country": "AU",
+        "platform": "pallet",
+        "notes": "AirTree Ventures portfolio — AU-focused, Series A/B"
+      },
+      {
+        "name": "icehouse",
+        "base_url": "https://jobs.icehouse.co.nz",
+        "search_path": "/jobs?search={query}",
+        "country": "NZ",
+        "platform": "pallet",
+        "notes": "Icehouse Ventures portfolio — NZ seed/early stage"
+      }
+    ]
+  },
+
   "companies": [
     { "name": "Xero", "careers_url": "https://www.xero.com/about/careers/", "country": "NZ" },
     { "name": "Canva", "careers_url": "https://www.canva.com/careers/", "country": "AU" },
