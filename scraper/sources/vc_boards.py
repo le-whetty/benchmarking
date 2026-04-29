@@ -67,13 +67,6 @@ VC_BOARDS = [
         "country": "AU",
         "platform": "pallet",
     },
-    {
-        "name": "icehouse",
-        "base_url": "https://jobs.icehouse.co.nz",
-        "search_path": "/jobs?search={query}",
-        "country": "NZ",
-        "platform": "pallet",
-    },
 ]
 
 SEARCH_QUERIES = [
@@ -350,7 +343,7 @@ async def _scrape_board(
 
 async def scrape(
     rejected_log: List[Dict],
-    min_confidence: float = 0.65,
+    min_confidence: float = 0.75,
 ) -> List[Listing]:
     listings: List[Listing] = []
     seen_urls: set = set()

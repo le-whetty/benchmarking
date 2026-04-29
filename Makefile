@@ -5,7 +5,7 @@
 # ── defaults ──────────────────────────────────────────────────────────────────
 # Default excludes LinkedIn and Wellfound (both need Playwright).
 # Run `make scrape-all` to include those too.
-SOURCE ?= seek_nz,seek_au,hatch,working_in_tech,vc_boards
+SOURCE ?= seek_nz,seek_au,hatch,vc_boards
 VENV   := .venv
 PYTHON := $(VENV)/bin/python3
 PIP    := $(VENV)/bin/pip
@@ -76,11 +76,11 @@ scrape-vc:
 
 # Startup/tech-focused sources only (no Seek, which skews enterprise)
 scrape-startup:
-	$(MAKE) scrape SOURCE=linkedin,wellfound,hatch,working_in_tech,vc_boards
+	$(MAKE) scrape SOURCE=linkedin,wellfound,hatch,vc_boards
 
 # Everything — includes LinkedIn + Wellfound which need Playwright
 scrape-all:
-	$(MAKE) scrape SOURCE=seek_nz,seek_au,linkedin,wellfound,hatch,working_in_tech,vc_boards
+	$(MAKE) scrape SOURCE=seek_nz,seek_au,linkedin,wellfound,hatch,vc_boards
 
 # ── utilities ─────────────────────────────────────────────────────────────────
 
@@ -102,8 +102,7 @@ help:
 	@echo "    make scrape-nz"
 	@echo "    make scrape-au"
 	@echo "    make scrape-hatch"
-	@echo "    make scrape-working-in-tech"
-	@echo "    make scrape-vc            Blackbird + AirTree + Icehouse"
+	@echo "    make scrape-vc            Blackbird + AirTree"
 	@echo "    make scrape-startup       All startup/tech sources (no Seek)"
 	@echo "    make scrape-linkedin      (needs Playwright)"
 	@echo "    make scrape-wellfound     (needs Playwright)"

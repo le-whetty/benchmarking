@@ -98,7 +98,7 @@ async def _fetch(client: httpx.AsyncClient, url: str, retries: int = 3) -> Optio
 
 async def scrape(
     rejected_log: List[Dict],
-    min_confidence: float = 0.65,
+    min_confidence: float = 0.75,
 ) -> List[Listing]:
     listings: List[Listing] = []
     seen_urls: set = set()

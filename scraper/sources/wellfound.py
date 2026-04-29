@@ -171,7 +171,7 @@ def _extract_salary_from_obj(obj: Dict) -> str:
 
 async def scrape(
     rejected_log: List[Dict],
-    min_confidence: float = 0.65,
+    min_confidence: float = 0.75,
 ) -> List[Listing]:
     listings: List[Listing] = []
     seen_urls: set = set()

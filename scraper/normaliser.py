@@ -11,35 +11,52 @@ from typing import List, Optional, Tuple
 
 # Each entry: (regex pattern, seniority, base_confidence)
 TITLE_RULES: List[Tuple[re.Pattern, str, float]] = [
-    # VP level
-    (re.compile(r"\bvp\b.*(revenue|revops|sales|gtm|go.?to.?market)", re.I), "vp", 0.95),
-    (re.compile(r"\bvice\s+president\b.*(revenue|sales|gtm)", re.I), "vp", 0.95),
+    # VP level — "sales" alone is too broad (VP of Sales ≠ VP RevOps); require ops context
+    (re.compile(r"\bvp\b.*(revenue\s+op|revops|sales\s+op|gtm\s+op|go.?to.?market)", re.I), "vp", 0.95),
+    (re.compile(r"\bvice\s+president\b.*(revenue\s+op|sales\s+op|gtm|go.?to.?market)", re.I), "vp", 0.95),
 
-    # Director level
-    (re.compile(r"\bdirector\b.*(revenue|revops|sales\s+op|gtm|go.?to.?market|commercial)", re.I), "director", 0.95),
-    (re.compile(r"\bdirector\b.*operations", re.I), "director", 0.75),
+    # Director level — require "operations/ops" alongside revenue/sales/commercial
+    (re.compile(r"\bdirector\b.*(revenue\s+op|revops|sales\s+op|gtm\s+op|go.?to.?market\s+op)", re.I), "director", 0.95),
+    (re.compile(r"\bdirector\b.*(gtm|go.?to.?market)", re.I), "director", 0.90),
+    (re.compile(r"\bdirector\b.*(revenue|sales)\s+op", re.I), "director", 0.90),
+    (re.compile(r"\bdirector\b.*(revenue|sales|commercial)\b", re.I), "director", 0.72),
 
-    # Head of
-    (re.compile(r"\bhead\s+of\b.*(revenue|revops|gtm|go.?to.?market|sales\s+op|commercial|business\s+op)", re.I), "head", 0.95),
-    (re.compile(r"\bhead\s+of\b.*operations", re.I), "head", 0.70),
+    # Head of — require ops/operations suffix for commercial/sales; revenue/GTM alone ok
+    (re.compile(r"\bhead\s+of\b.*(revenue\s+op|revops|gtm\s+op|go.?to.?market\s+op|sales\s+op)", re.I), "head", 0.95),
+    (re.compile(r"\bhead\s+of\b.*(revenue|gtm|go.?to.?market)", re.I), "head", 0.88),
+    (re.compile(r"\bhead\s+of\b.*(commercial\s+op|business\s+op|sales\s+op)", re.I), "head", 0.82),
+    (re.compile(r"\bhead\s+of\b.*(commercial|sales)\b", re.I), "head", 0.62),
 
-    # Senior Manager
-    (re.compile(r"\bsenior\s+manager\b.*(revenue|revops|gtm|sales\s+op)", re.I), "senior_manager", 0.85),
+    # Senior Manager — only specific RevOps/GTM terms
+    (re.compile(r"\bsenior\s+manager\b.*(revenue\s+op|revops|gtm\s+op|sales\s+op)", re.I), "senior_manager", 0.88),
+    (re.compile(r"\bsenior\s+manager\b.*(revenue|gtm)", re.I), "senior_manager", 0.75),
 
-    # Manager (lower confidence — needs scope signals to include)
-    (re.compile(r"\bmanager\b.*(revenue|revops|gtm|sales\s+op)", re.I), "manager", 0.65),
+    # Manager — only very specific terms pass the default 0.75 threshold
+    (re.compile(r"\bmanager\b.*(revenue\s+op|revops|gtm\s+op|sales\s+op)", re.I), "manager", 0.78),
 
-    # Strategy / GTM leads
-    (re.compile(r"\bgtm\s+(strategy|operations|ops)\b", re.I), "head", 0.80),
-    (re.compile(r"\brevenue\s+(strategy|operations|ops)\b", re.I), "head", 0.80),
-    (re.compile(r"\bgo.?to.?market\s+(strategy|lead|operations)", re.I), "head", 0.80),
+    # GTM Strategy leads
+    (re.compile(r"\bgtm\s+(strategy|operations|ops)\b", re.I), "head", 0.82),
+    (re.compile(r"\brevenue\s+(strategy|operations|ops)\b", re.I), "head", 0.82),
+    (re.compile(r"\bgo.?to.?market\s+(strategy|lead|operations)", re.I), "head", 0.82),
 ]
 
 # Patterns that immediately disqualify a title
 EXCLUDE_PATTERNS = [
+    # IC / junior roles
     re.compile(r"\b(analyst|coordinator|specialist|associate|junior|intern)\b", re.I),
-    re.compile(r"\bmarketing\s+op", re.I),          # marketing ops only
-    re.compile(r"\bcustomer\s+success\s+op", re.I),  # CS ops only
+    # Single-function ops (not cross-GTM)
+    re.compile(r"\bmarketing\s+op", re.I),
+    re.compile(r"\bcustomer\s+success\s+op", re.I),
+    # Structural red flags — not GTM leadership roles
+    re.compile(r"\b(deputy\s+head|group\s+head|assistant\s+head)\b", re.I),
+    re.compile(r"\bnational\s+manager\b", re.I),
+    # Non-GTM industries appearing in the title itself
+    re.compile(r"\b(campus|clinical|school|hospital|aged\s+care|disability)\b", re.I),
+    re.compile(r"\b(facilities|warehouse|fleet|supply\s+chain|transport(?:ation)?|logistics)\b", re.I),
+    # Finance / legal confusion
+    re.compile(r"\b(commercial\s+partner|commercial\s+trading|commercial\s+counsel|finance\s+lead|chief\s+financial)\b", re.I),
+    # "VP of Sales" without operations context — too far from RevOps scope
+    re.compile(r"\bvp\s+of\s+sales\b(?!\s*(op|&|and))", re.I),
 ]
 
 
