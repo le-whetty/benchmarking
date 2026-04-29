@@ -3,7 +3,9 @@
         scrape-working-in-tech scrape-vc scrape-startup scrape-all
 
 # ── defaults ─────────────────────────────────────────────────────────────────
-SOURCE ?= seek_nz,seek_au,linkedin,wellfound,hatch,working_in_tech,vc_boards
+# Default excludes LinkedIn and Wellfound (both need Playwright).
+# Run `make scrape-all` to include those too.
+SOURCE ?= seek_nz,seek_au,hatch,working_in_tech,vc_boards
 PYTHON  ?= python3
 
 # ── top-level targets ─────────────────────────────────────────────────────────
@@ -63,6 +65,10 @@ scrape-vc:
 scrape-startup:
 	$(MAKE) scrape SOURCE=linkedin,wellfound,hatch,working_in_tech,vc_boards
 
+# Everything — includes LinkedIn + Wellfound which need Playwright
+scrape-all:
+	$(MAKE) scrape SOURCE=seek_nz,seek_au,linkedin,wellfound,hatch,working_in_tech,vc_boards
+
 # Show rejected listings
 rejected:
 	@$(PYTHON) -c "import json,sys; data=json.load(open('data/rejected.json')); \
@@ -73,7 +79,8 @@ help:
 	@echo "  make all                  — scrape all sources, then start web server"
 	@echo "  make seed                 — load seed data (no scraping needed)"
 	@echo "  make web                  — start React dev server only"
-	@echo "  make scrape               — scrape all sources"
+	@echo "  make scrape               — scrape all sources (no Playwright needed)
+  make scrape-all           — scrape everything incl. LinkedIn + Wellfound"
 	@echo "  make scrape SOURCE=seek_nz,hatch,vc_boards"
 	@echo ""
 	@echo "  Per-source shortcuts:"
