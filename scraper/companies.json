@@ -1,0 +1,20 @@
+{
+  "_comment": "Known ANZ SaaS/tech companies that often post comp on their careers pages. Add more as you discover them.",
+  "companies": [
+    { "name": "Xero", "careers_url": "https://www.xero.com/about/careers/", "country": "NZ" },
+    { "name": "Canva", "careers_url": "https://www.canva.com/careers/", "country": "AU" },
+    { "name": "Atlassian", "careers_url": "https://www.atlassian.com/company/careers", "country": "AU" },
+    { "name": "Culture Amp", "careers_url": "https://www.cultureamp.com/company/careers", "country": "AU" },
+    { "name": "Linktree", "careers_url": "https://linktr.ee/careers", "country": "AU" },
+    { "name": "Employment Hero", "careers_url": "https://employmenthero.com/careers/", "country": "AU" },
+    { "name": "SafetyCulture", "careers_url": "https://safetyCulture.com/about/careers/", "country": "AU" },
+    { "name": "Octopus Deploy", "careers_url": "https://octopus.com/company/careers", "country": "AU" },
+    { "name": "Pushpay", "careers_url": "https://pushpay.com/careers/", "country": "NZ" },
+    { "name": "Auror", "careers_url": "https://www.auror.co/careers", "country": "NZ" },
+    { "name": "Tracksuit", "careers_url": "https://www.gotracksuit.com/careers", "country": "NZ" },
+    { "name": "Sharesies", "careers_url": "https://sharesies.com/careers", "country": "NZ" },
+    { "name": "Hnry", "careers_url": "https://hnry.com.au/careers", "country": "NZ" },
+    { "name": "Halter", "careers_url": "https://www.halterhq.com/careers", "country": "NZ" },
+    { "name": "Vend / Lightspeed", "careers_url": "https://www.lightspeedhq.com/careers/", "country": "NZ" }
+  ]
+}
