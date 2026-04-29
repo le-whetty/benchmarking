@@ -1,13 +1,33 @@
 .PHONY: all scrape web install install-playwright seed help \
         scrape-nz scrape-au scrape-linkedin scrape-wellfound scrape-hatch \
-        scrape-working-in-tech scrape-vc scrape-startup scrape-all
+        scrape-working-in-tech scrape-vc scrape-startup scrape-all venv
 
-# ── defaults ─────────────────────────────────────────────────────────────────
+# ── defaults ──────────────────────────────────────────────────────────────────
 # Default excludes LinkedIn and Wellfound (both need Playwright).
 # Run `make scrape-all` to include those too.
 SOURCE ?= seek_nz,seek_au,hatch,working_in_tech,vc_boards
-PYTHON  ?= python3
-PIP     ?= $(shell command -v pip3 2>/dev/null || command -v pip 2>/dev/null || echo "pip3")
+VENV   := .venv
+PYTHON := $(VENV)/bin/python3
+PIP    := $(VENV)/bin/pip
+
+# ── venv setup ────────────────────────────────────────────────────────────────
+
+$(VENV)/bin/activate:
+	python3 -m venv $(VENV)
+	$(PIP) install --upgrade pip
+
+venv: $(VENV)/bin/activate
+
+# Install Python dependencies into the venv
+install: venv
+	$(PIP) install -r scraper/requirements.txt
+	@echo "✓ Python dependencies installed in $(VENV)"
+
+# Install Playwright browsers (run once after install)
+install-playwright: install
+	$(PIP) install playwright
+	$(VENV)/bin/playwright install chromium
+	@echo "✓ Playwright + Chromium installed"
 
 # ── top-level targets ─────────────────────────────────────────────────────────
 
@@ -15,7 +35,7 @@ all: scrape web
 	@echo "Done. Open http://localhost:5173 in your browser."
 
 # Run scraper then copy output to web public dir
-scrape:
+scrape: $(VENV)/bin/activate
 	@echo "▶ Scraping sources: $(SOURCE)"
 	$(PYTHON) -m scraper.run --source $(SOURCE)
 	@cp data/listings.json web/public/data/listings.json
@@ -31,16 +51,7 @@ seed:
 web:
 	@cd web && npm run dev
 
-# Install Python dependencies
-install:
-	$(PIP) install -r scraper/requirements.txt
-
-# Install Playwright browsers (run once after pip install)
-install-playwright:
-	$(PIP) install playwright
-	playwright install chromium
-
-# ── convenience targets ───────────────────────────────────────────────────────
+# ── per-source shortcuts ──────────────────────────────────────────────────────
 
 scrape-nz:
 	$(MAKE) scrape SOURCE=seek_nz
@@ -71,31 +82,32 @@ scrape-startup:
 scrape-all:
 	$(MAKE) scrape SOURCE=seek_nz,seek_au,linkedin,wellfound,hatch,working_in_tech,vc_boards
 
+# ── utilities ─────────────────────────────────────────────────────────────────
+
 # Show rejected listings
 rejected:
-	@$(PYTHON) -c "import json,sys; data=json.load(open('data/rejected.json')); \
-	  [print(f\"{r['source']:12} {r['reason']:35} {r.get('title','')[:60]}\") for r in data]"
+	@$(PYTHON) -c "import json,sys; data=json.load(open('data/rejected.json')); [print(f\"{r['source']:12} {r['reason']:35} {r.get('title','')[:60]}\") for r in data]"
 
 help:
 	@echo ""
-	@echo "  make all                  — scrape all sources, then start web server"
-	@echo "  make seed                 — load seed data (no scraping needed)"
-	@echo "  make web                  — start React dev server only"
-	@echo "  make scrape               — scrape all sources (no Playwright needed)
-  make scrape-all           — scrape everything incl. LinkedIn + Wellfound"
+	@echo "  make install              — create venv + install Python deps (run once)"
+	@echo "  make seed                 — load seed data, no scraping needed"
+	@echo "  make web                  — start React dev server at localhost:5173"
+	@echo "  make scrape               — scrape default sources (no Playwright needed)"
+	@echo "  make scrape-all           — scrape everything incl. LinkedIn + Wellfound"
 	@echo "  make scrape SOURCE=seek_nz,hatch,vc_boards"
+	@echo "  make all                  — scrape then start web server"
 	@echo ""
 	@echo "  Per-source shortcuts:"
-	@echo "    make scrape-nz            Seek NZ"
-	@echo "    make scrape-au            Seek AU"
-	@echo "    make scrape-linkedin      LinkedIn (needs Playwright)"
-	@echo "    make scrape-wellfound     Wellfound/AngelList (needs Playwright)"
-	@echo "    make scrape-hatch         Hatch NZ startup board"
-	@echo "    make scrape-working-in-tech  Working In Tech NZ"
-	@echo "    make scrape-vc            Blackbird + AirTree + Icehouse boards"
+	@echo "    make scrape-nz"
+	@echo "    make scrape-au"
+	@echo "    make scrape-hatch"
+	@echo "    make scrape-working-in-tech"
+	@echo "    make scrape-vc            Blackbird + AirTree + Icehouse"
 	@echo "    make scrape-startup       All startup/tech sources (no Seek)"
+	@echo "    make scrape-linkedin      (needs Playwright)"
+	@echo "    make scrape-wellfound     (needs Playwright)"
 	@echo ""
-	@echo "  make install              pip install scraper dependencies"
-	@echo "  make install-playwright   download Chromium for Playwright"
-	@echo "  make rejected             print rejected listing reasons"
+	@echo "  make install-playwright   — install Playwright + Chromium"
+	@echo "  make rejected             — print rejected listings with reasons"
 	@echo ""
