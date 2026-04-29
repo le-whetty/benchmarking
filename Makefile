@@ -7,6 +7,7 @@
 # Run `make scrape-all` to include those too.
 SOURCE ?= seek_nz,seek_au,hatch,working_in_tech,vc_boards
 PYTHON  ?= python3
+PIP     ?= $(shell command -v pip3 2>/dev/null || command -v pip 2>/dev/null || echo "pip3")
 
 # ── top-level targets ─────────────────────────────────────────────────────────
 
@@ -32,10 +33,11 @@ web:
 
 # Install Python dependencies
 install:
-	pip install -r scraper/requirements.txt
+	$(PIP) install -r scraper/requirements.txt
 
 # Install Playwright browsers (run once after pip install)
 install-playwright:
+	$(PIP) install playwright
 	playwright install chromium
 
 # ── convenience targets ───────────────────────────────────────────────────────
