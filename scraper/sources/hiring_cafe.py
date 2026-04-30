@@ -320,6 +320,16 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
             page = await context.new_page()
             page.on("response", _on_response)
 
+            # Apply stealth patches — hides Playwright's automation signals
+            # from Cloudflare's bot detection (navigator.webdriver, etc.)
+            try:
+                from playwright_stealth import stealth_async
+                await stealth_async(page)
+                logger.debug("[hiring_cafe] Stealth patches applied")
+            except ImportError:
+                logger.warning("[hiring_cafe] playwright-stealth not installed — "
+                               "run `pip install playwright-stealth` if CF is blocking")
+
             try:
                 logger.info("[hiring_cafe] Loading search page…")
                 await page.goto(url, timeout=60_000, wait_until="load")
