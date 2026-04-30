@@ -292,7 +292,14 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
 
     try:
         async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=True)
+            browser = await pw.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-dev-shm-usage",
+                ],
+            )
             context = await browser.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -300,28 +307,51 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
                     "Chrome/124.0.0.0 Safari/537.36"
                 ),
                 viewport={"width": 1440, "height": 900},
+                locale="en-US",
+                timezone_id="America/New_York",
             )
+            # Remove headless fingerprints that trigger bot detection
+            await context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+                window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
+            """)
             page = await context.new_page()
             page.on("response", _on_response)
 
             try:
                 logger.info("[hiring_cafe] Loading search page…")
-                # Use "load" not "networkidle" — hiring.cafe keeps persistent
-                # connections (Firebase/WebSocket) that prevent networkidle firing.
                 await page.goto(url, timeout=60_000, wait_until="load")
 
-                # Wait for job content to appear (up to 15s) before scrolling
+                # Give JS time to hydrate and fetch initial data
+                await asyncio.sleep(5)
+
+                # Diagnose what we got before waiting for selectors
+                page_title = await page.title()
+                body_text_len = await page.evaluate("() => document.body?.innerText?.length || 0")
+                logger.info("[hiring_cafe] Page loaded — title: %r, body text length: %d", page_title, body_text_len)
+
+                # Save debug HTML (overwritten each run, inspect at data/cache/hiring_cafe_debug.html)
+                debug_html = await page.content()
+                from pathlib import Path
+                Path("data/cache").mkdir(parents=True, exist_ok=True)
+                Path("data/cache/hiring_cafe_debug.html").write_text(debug_html, encoding="utf-8")
+                logger.info("[hiring_cafe] Debug HTML saved to data/cache/hiring_cafe_debug.html (%d bytes)", len(debug_html))
+
+                # Wait for job content
                 try:
                     await page.wait_for_selector(
                         "article, [class*='job'], [class*='listing'], [class*='result'], "
                         "[class*='card'], main a[href*='/job']",
                         timeout=15_000,
                     )
-                    logger.debug("[hiring_cafe] Job content appeared in DOM")
+                    logger.info("[hiring_cafe] Job content found in DOM")
                 except PlaywrightTimeout:
-                    logger.debug("[hiring_cafe] Selector wait timed out — proceeding anyway")
+                    logger.warning("[hiring_cafe] No job selectors matched — site may be blocking headless browsers. "
+                                   "Inspect data/cache/hiring_cafe_debug.html to see what was rendered.")
 
-                await asyncio.sleep(3)
+                await asyncio.sleep(2)
 
                 # Scroll to trigger lazy-loaded content
                 prev_count = len(api_jobs)
