@@ -306,7 +306,21 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
 
             try:
                 logger.info("[hiring_cafe] Loading search page…")
-                await page.goto(url, timeout=45_000, wait_until="networkidle")
+                # Use "load" not "networkidle" — hiring.cafe keeps persistent
+                # connections (Firebase/WebSocket) that prevent networkidle firing.
+                await page.goto(url, timeout=60_000, wait_until="load")
+
+                # Wait for job content to appear (up to 15s) before scrolling
+                try:
+                    await page.wait_for_selector(
+                        "article, [class*='job'], [class*='listing'], [class*='result'], "
+                        "[class*='card'], main a[href*='/job']",
+                        timeout=15_000,
+                    )
+                    logger.debug("[hiring_cafe] Job content appeared in DOM")
+                except PlaywrightTimeout:
+                    logger.debug("[hiring_cafe] Selector wait timed out — proceeding anyway")
+
                 await asyncio.sleep(3)
 
                 # Scroll to trigger lazy-loaded content
@@ -317,7 +331,6 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
                     new_count = len(api_jobs)
                     logger.debug("[hiring_cafe] Scroll %d: %d total jobs captured", round_num + 1, new_count)
                     if new_count == prev_count and round_num > 1:
-                        # No new jobs loaded after two scrolls — we've hit the end
                         break
                     prev_count = new_count
 
@@ -326,7 +339,13 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
                 return html, api_jobs
 
             except PlaywrightTimeout:
-                logger.warning("[hiring_cafe] Page load timeout")
+                logger.warning("[hiring_cafe] Page load timeout — trying with whatever content loaded")
+                try:
+                    html = await page.content()
+                    if len(html) > 5000:  # got some content
+                        return html, api_jobs
+                except Exception:
+                    pass
                 return None
             finally:
                 await browser.close()

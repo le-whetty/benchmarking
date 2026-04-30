@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import statistics
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -238,7 +238,7 @@ def analyse(
     )
 
     result = {
-        "generated_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "total_listings": len(listings),
         "listings_with_salary": total_with_salary,
         "fx_rates_used": FX_TO_NZD,
