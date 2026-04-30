@@ -35,6 +35,7 @@ ALL_SOURCES = [
     "hatch",
     "working_in_tech",
     "vc_boards",
+    "hiring_cafe",
 ]
 
 
@@ -60,6 +61,9 @@ def _load_source_module(name: str):
     if name == "vc_boards":
         from scraper.sources import vc_boards
         return vc_boards
+    if name == "hiring_cafe":
+        from scraper.sources import hiring_cafe
+        return hiring_cafe
     raise ValueError(f"Unknown source: {name!r}. Available: {ALL_SOURCES}")
 
 
@@ -116,6 +120,22 @@ async def main(sources: List[str]) -> None:
         f"  Output: {LISTINGS_FILE}\n"
         f"  Snapshot: {snapshot}"
     )
+
+    # Auto-run regional analysis after every scrape
+    try:
+        from scraper.analysis.regional import analyse, ANALYSIS_FILE
+        logger.info("Running regional analysis…")
+        result = analyse()
+        est = result.get("nz_estimate", {})
+        if not est.get("insufficient_data"):
+            print(
+                f"\n  NZ estimate (ratio method): "
+                f"NZ${est['estimated_p25_nzd']:,} – NZ${est['estimated_p75_nzd']:,} "
+                f"(median NZ${est['estimated_median_nzd']:,})"
+            )
+        print(f"  Analysis: {ANALYSIS_FILE}")
+    except Exception as exc:
+        logger.warning("Analysis step failed (non-fatal): %s", exc)
 
 
 def cli() -> None:

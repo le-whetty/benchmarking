@@ -8,8 +8,8 @@ from pydantic import BaseModel, field_validator
 
 
 SENIORITY = Literal["manager", "senior_manager", "head", "director", "vp"]
-COUNTRY = Literal["NZ", "AU", "ANZ", "REMOTE"]
-CURRENCY = Literal["NZD", "AUD", "USD"]
+COUNTRY = Literal["NZ", "AU", "ANZ", "US", "UK", "REMOTE"]
+CURRENCY = Literal["NZD", "AUD", "USD", "GBP"]
 
 SALARY_MIN_NZD = 50_000
 SALARY_MAX_NZD = 1_000_000

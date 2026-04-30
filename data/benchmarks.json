@@ -1,0 +1,30 @@
+{
+  "note": "Edit nz_anchors with Tracksuit's actual pay bands to improve the NZ estimate accuracy. The ratio method uses market_swe_benchmarks to calibrate how RevOps pay compares to engineering pay in each market, then applies that ratio to your NZ SWE anchor.",
+  "nz_anchors": {
+    "software_engineer_mid": 110000,
+    "product_manager_mid": 120000
+  },
+  "market_swe_benchmarks": {
+    "US": {
+      "value": 155000,
+      "currency": "USD",
+      "note": "Mid-level SWE base salary, US market consensus (Levels.fyi/Glassdoor ~2024)"
+    },
+    "UK": {
+      "value": 80000,
+      "currency": "GBP",
+      "note": "Mid-level SWE base salary, UK market consensus (Glassdoor/Hired ~2024)"
+    },
+    "AU": {
+      "value": 135000,
+      "currency": "AUD",
+      "note": "Mid-level SWE base salary, AU market consensus (Seek/Glassdoor ~2024)"
+    }
+  },
+  "fx_rates": {
+    "AUD_TO_NZD": 1.09,
+    "USD_TO_NZD": 1.65,
+    "GBP_TO_NZD": 2.10,
+    "note": "Approximate spot rates — update periodically"
+  }
+}

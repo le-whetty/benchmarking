@@ -38,6 +38,15 @@ TITLE_RULES: List[Tuple[re.Pattern, str, float]] = [
     (re.compile(r"\bgtm\s+(strategy|operations|ops)\b", re.I), "head", 0.82),
     (re.compile(r"\brevenue\s+(strategy|operations|ops)\b", re.I), "head", 0.82),
     (re.compile(r"\bgo.?to.?market\s+(strategy|lead|operations)", re.I), "head", 0.82),
+
+    # GTM Engineering — technical RevOps (automation, tooling, integrations)
+    (re.compile(r"\b(head|director|vp|lead)\b.*(gtm|go.?to.?market).+engineer", re.I), "head", 0.90),
+    (re.compile(r"\b(head|director|vp|lead)\b.*revops?\s+engineer", re.I), "head", 0.90),
+    (re.compile(r"\bgtm\s+engineer(ing)?\b", re.I), "manager", 0.82),
+    (re.compile(r"\bgo.?to.?market\s+engineer(ing)?\b", re.I), "manager", 0.82),
+    (re.compile(r"\brevops?\s+engineer(ing)?\b", re.I), "manager", 0.80),
+    (re.compile(r"\bsales\s+systems?\s+(engineer|architect|admin)\b", re.I), "manager", 0.78),
+    (re.compile(r"\bai\s+(sales|gtm|revenue)\s+(engineer|ops|automation)\b", re.I), "manager", 0.78),
 ]
 
 # Patterns that immediately disqualify a title
@@ -138,9 +147,14 @@ _NZ_CITIES = ["Auckland", "Wellington", "Christchurch", "Hamilton", "Tauranga",
                "Dunedin", "Napier", "Palmerston North", "Nelson", "Rotorua"]
 _AU_CITIES = ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide",
                "Canberra", "Gold Coast", "Newcastle", "Wollongong", "Hobart"]
+_US_CITIES = ["San Francisco", "New York", "Chicago", "Austin", "Boston",
+               "Seattle", "Los Angeles", "Denver", "Atlanta", "Miami",
+               "San Jose", "Nashville", "Dallas", "Houston", "Minneapolis"]
+_UK_CITIES = ["London", "Manchester", "Edinburgh", "Birmingham", "Bristol",
+               "Leeds", "Glasgow", "Liverpool", "Sheffield", "Cambridge"]
 
 _CITY_PATTERN = re.compile(
-    r"\b(" + "|".join(_NZ_CITIES + _AU_CITIES) + r")\b",
+    r"\b(" + "|".join(_NZ_CITIES + _AU_CITIES + _US_CITIES + _UK_CITIES) + r")\b",
     re.I,
 )
 
@@ -158,6 +172,12 @@ def infer_country(location: str, source: str) -> str:
         return "NZ"
     if any(c in loc_upper for c in ["AUSTRALIA", "AU", "AUS", "NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"]):
         return "AU"
+    if any(c in loc_upper for c in ["UNITED STATES", "USA", ", CA", ", NY", ", TX", ", WA", "CALIFORNIA",
+                                     "NEW YORK", "TEXAS", "ILLINOIS", "MASSACHUSETTS", "COLORADO"]):
+        return "US"
+    if any(c in loc_upper for c in ["UNITED KINGDOM", "UK", "ENGLAND", "SCOTLAND", "WALES",
+                                     "LONDON", "MANCHESTER", "EDINBURGH", "BIRMINGHAM"]):
+        return "UK"
     if "REMOTE" in loc_upper:
         return "REMOTE"
     # Fall back to source hint
@@ -165,6 +185,10 @@ def infer_country(location: str, source: str) -> str:
         return "NZ"
     if source.endswith("_au"):
         return "AU"
+    if source.endswith("_us"):
+        return "US"
+    if source.endswith("_uk"):
+        return "UK"
     return "ANZ"
 
 

@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 _CURRENCY_HINTS = {
     "NZD": re.compile(r"NZ\$|NZD", re.I),
     "AUD": re.compile(r"AU\$|AUD|A\$", re.I),
-    "USD": re.compile(r"US\$|USD", re.I),
+    "USD": re.compile(r"US\$|USD|\bUSD\b", re.I),
+    "GBP": re.compile(r"£|GBP|\bGBP\b", re.I),
 }
 
 _GENERIC_DOLLAR = re.compile(r"\$")
@@ -28,6 +29,10 @@ def detect_currency(text: str, country: str = "NZ") -> str:
     # Fall back to country default
     if country == "AU":
         return "AUD"
+    if country == "US":
+        return "USD"
+    if country == "UK":
+        return "GBP"
     return "NZD"
 
 
@@ -49,19 +54,19 @@ def _parse_number(s: str) -> Optional[float]:
 # ── main extraction patterns ──────────────────────────────────────────────────
 
 # Matches patterns like:
-#   $180k–$220k  |  $180,000 - $220,000  |  180k-220k  |  $180-220k
+#   $180k–$220k  |  £80k–£120k  |  $180,000 - $220,000  |  180k-220k
 _RANGE_PATTERN = re.compile(
-    r"(?:NZ\$|AU\$|A\$|US\$|\$)?\s*"
+    r"(?:NZ\$|AU\$|A\$|US\$|£|\$)?\s*"
     r"([\d,]+(?:\.\d+)?[kKmM]?)"
     r"\s*[-–—to]+\s*"
-    r"(?:NZ\$|AU\$|A\$|US\$|\$)?\s*"
+    r"(?:NZ\$|AU\$|A\$|US\$|£|\$)?\s*"
     r"([\d,]+(?:\.\d+)?[kKmM]?)",
     re.I,
 )
 
-# Single value: "$180k"
+# Single value: "$180k" or "£120k"
 _SINGLE_PATTERN = re.compile(
-    r"(?:NZ\$|AU\$|A\$|US\$|\$)\s*([\d,]+(?:\.\d+)?[kKmM]?)",
+    r"(?:NZ\$|AU\$|A\$|US\$|£|\$)\s*([\d,]+(?:\.\d+)?[kKmM]?)",
     re.I,
 )
 
@@ -79,11 +84,15 @@ SALARY_MAX_NZD = 1_000_000
 AUD_TO_NZD = 1.09
 
 
+GBP_TO_NZD = 2.10
+
 def _to_nzd(value: float, currency: str) -> float:
     if currency == "AUD":
         return value * AUD_TO_NZD
     if currency == "USD":
         return value * 1.65
+    if currency == "GBP":
+        return value * GBP_TO_NZD
     return value
 
 

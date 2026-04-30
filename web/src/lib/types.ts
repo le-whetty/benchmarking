@@ -1,6 +1,6 @@
 export type Seniority = "manager" | "senior_manager" | "head" | "director" | "vp";
-export type Country = "NZ" | "AU" | "ANZ" | "REMOTE";
-export type Currency = "NZD" | "AUD" | "USD";
+export type Country = "NZ" | "AU" | "ANZ" | "US" | "UK" | "REMOTE";
+export type Currency = "NZD" | "AUD" | "USD" | "GBP";
 export type CompanySize = "startup" | "scaleup" | "enterprise";
 
 export interface Listing {
@@ -64,14 +64,60 @@ export const SCOPE_SIGNAL_LABELS: Record<string, string> = {
 // Hardcoded FX rates — update periodically
 export const AUD_TO_NZD = 1.09;
 export const USD_TO_NZD = 1.65;
+export const GBP_TO_NZD = 2.10;
 
 export function toNZD(value: number, currency: Currency): number {
   if (currency === "AUD") return value * AUD_TO_NZD;
   if (currency === "USD") return value * USD_TO_NZD;
+  if (currency === "GBP") return value * GBP_TO_NZD;
   return value;
 }
 
 export function formatSalary(value: number, currency: Currency): string {
   const k = Math.round(value / 1000);
-  return `${currency === "NZD" ? "NZ$" : currency === "AUD" ? "A$" : "US$"}${k}k`;
+  const sym = currency === "NZD" ? "NZ$" : currency === "AUD" ? "A$" : currency === "GBP" ? "£" : "US$";
+  return `${sym}${k}k`;
+}
+
+// ── Analysis types ────────────────────────────────────────────────────────────
+
+export interface RegionalStats {
+  n: number;
+  currency: string;
+  p25_nzd: number;
+  median_nzd: number;
+  p75_nzd: number;
+  mean_nzd: number;
+  p25_local: number;
+  median_local: number;
+  p75_local: number;
+  by_seniority: Record<string, { n: number; median_nzd: number; median_local: number }>;
+}
+
+export interface NZEstimate {
+  insufficient_data: boolean;
+  method?: string;
+  nz_swe_anchor_nzd?: number;
+  market_ratios?: Record<string, number>;
+  avg_ratio?: number;
+  estimated_p25_nzd?: number;
+  estimated_median_nzd?: number;
+  estimated_p75_nzd?: number;
+  caveats?: string[];
+}
+
+export interface TopCompany {
+  company: string;
+  country: string;
+  n_roles: number;
+  median_nzd: number;
+}
+
+export interface Analysis {
+  generated_at: string;
+  total_listings: number;
+  listings_with_salary: number;
+  regional: Record<string, RegionalStats>;
+  nz_estimate: NZEstimate;
+  top_companies_by_salary: TopCompany[];
 }

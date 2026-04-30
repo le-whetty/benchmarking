@@ -1,11 +1,11 @@
-.PHONY: all scrape web install install-playwright seed help \
+.PHONY: all scrape analyse web install install-playwright seed help \
         scrape-nz scrape-au scrape-linkedin scrape-wellfound scrape-hatch \
-        scrape-working-in-tech scrape-vc scrape-startup scrape-all venv
+        scrape-hiring-cafe scrape-vc scrape-startup scrape-all venv
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 # Default excludes LinkedIn and Wellfound (both need Playwright).
-# Run `make scrape-all` to include those too.
-SOURCE ?= seek_nz,seek_au,hatch,vc_boards
+# hiring_cafe needs Playwright but is the primary global benchmark source.
+SOURCE ?= seek_nz,seek_au,hatch,vc_boards,hiring_cafe
 VENV   := .venv
 PYTHON := $(VENV)/bin/python3
 PIP    := $(VENV)/bin/pip
@@ -34,12 +34,23 @@ install-playwright: install
 all: scrape web
 	@echo "Done. Open http://localhost:5173 in your browser."
 
-# Run scraper then copy output to web public dir
+# Run scraper (analysis runs automatically inside scraper.run), then copy outputs
 scrape: $(VENV)/bin/activate
 	@echo "▶ Scraping sources: $(SOURCE)"
 	$(PYTHON) -m scraper.run --source $(SOURCE)
 	@cp data/listings.json web/public/data/listings.json
 	@echo "✓ Listings copied to web/public/data/listings.json"
+	@if [ -f data/analysis.json ]; then \
+		cp data/analysis.json web/public/data/analysis.json; \
+		echo "✓ Analysis copied to web/public/data/analysis.json"; \
+	fi
+
+# Run analysis only (re-reads existing listings.json — no re-scraping)
+analyse: $(VENV)/bin/activate
+	@echo "▶ Running regional analysis…"
+	$(PYTHON) -m scraper.analysis.regional
+	@cp data/analysis.json web/public/data/analysis.json
+	@echo "✓ Analysis copied to web/public/data/analysis.json"
 
 # Just copy the seed data (no scraping) — useful for first-run demo
 seed:
@@ -68,6 +79,9 @@ scrape-wellfound:
 scrape-hatch:
 	$(MAKE) scrape SOURCE=hatch
 
+scrape-hiring-cafe:
+	$(MAKE) scrape SOURCE=hiring_cafe
+
 scrape-working-in-tech:
 	$(MAKE) scrape SOURCE=working_in_tech
 
@@ -76,11 +90,11 @@ scrape-vc:
 
 # Startup/tech-focused sources only (no Seek, which skews enterprise)
 scrape-startup:
-	$(MAKE) scrape SOURCE=linkedin,wellfound,hatch,vc_boards
+	$(MAKE) scrape SOURCE=linkedin,wellfound,hatch,vc_boards,hiring_cafe
 
-# Everything — includes LinkedIn + Wellfound which need Playwright
+# Everything
 scrape-all:
-	$(MAKE) scrape SOURCE=seek_nz,seek_au,linkedin,wellfound,hatch,vc_boards
+	$(MAKE) scrape SOURCE=seek_nz,seek_au,linkedin,wellfound,hatch,vc_boards,hiring_cafe
 
 # ── utilities ─────────────────────────────────────────────────────────────────
 
@@ -102,11 +116,13 @@ help:
 	@echo "    make scrape-nz"
 	@echo "    make scrape-au"
 	@echo "    make scrape-hatch"
+	@echo "    make scrape-hiring-cafe   Global benchmark source (needs Playwright)"
 	@echo "    make scrape-vc            Blackbird + AirTree"
 	@echo "    make scrape-startup       All startup/tech sources (no Seek)"
 	@echo "    make scrape-linkedin      (needs Playwright)"
 	@echo "    make scrape-wellfound     (needs Playwright)"
 	@echo ""
-	@echo "  make install-playwright   — install Playwright + Chromium"
+	@echo "  make install-playwright   — install Playwright + Chromium (needed for hiring_cafe)"
+	@echo "  make analyse              — rerun analysis on existing listings (no re-scraping)"
 	@echo "  make rejected             — print rejected listings with reasons"
 	@echo ""
