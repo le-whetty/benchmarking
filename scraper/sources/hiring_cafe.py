@@ -37,26 +37,26 @@ REQUEST_DELAY = 3.0
 MAX_SCROLL_ROUNDS = 8      # infinite-scroll iterations
 SCROLL_PAUSE = 2.5         # seconds between scrolls
 
-# Exact URL from user — searches RevOps/GTM Ops/GTM Engineering across US/UK/AU/NZ,
-# all time, sorted by highest compensation first.
+# Exact URL provided by user — RevOps/GTM Ops/GTM Engineering across US/UK/AU/NZ,
+# all time, sorted by highest compensation first. Uses + encoding to match browser exactly.
 SEARCH_URL = (
-    "https://hiring.cafe/?searchState=%7B%22jobTitleQuery%22%3A%22%5C%22revenue%20operations%5C%22%2C"
-    "%20%5C%22gtm%20operations%5C%22%2C%20%5C%22revops%5C%22%2C%20%5C%22gtm%20engineering%5C%22%2C"
-    "%20%5C%22go%20to%20market%20engineering%5C%22%2C%20%5C%22go%20to%20market%20operations%5C%22%2C"
-    "%20%5C%22ai%20operations%5C%22%22%2C%22dateFetchedPastNDays%22%3A-1%2C%22sortBy%22%3A"
+    "https://hiring.cafe/?searchState=%7B%22jobTitleQuery%22%3A%22%5C%22revenue+operations%5C%22%2C"
+    "+%5C%22gtm+operations%5C%22%2C+%5C%22revops%5C%22%2C+%5C%22gtm+engineering%5C%22%2C"
+    "+%5C%22go+to+market+engineering%5C%22%2C+%5C%22go+to+market+operations%5C%22%2C"
+    "+%5C%22ai+operations%5C%22%22%2C%22dateFetchedPastNDays%22%3A-1%2C%22sortBy%22%3A"
     "%22compensation_desc%22%2C%22locations%22%3A%5B%7B%22id%22%3A%22LBY1yZQBoEtHp_8UEq3V%22%2C"
     "%22types%22%3A%5B%22continent%22%5D%2C%22address_components%22%3A%5B%7B%22long_name%22%3A"
     "%22Australia%22%2C%22short_name%22%3A%22Australia%22%2C%22types%22%3A%5B%22continent%22%5D%7D%5D"
-    "%2C%22formatted_address%22%3A%22Australia%20%2F%20Oceania%22%2C%22population%22%3A42000000%2C"
+    "%2C%22formatted_address%22%3A%22Australia+%2F+Oceania%22%2C%22population%22%3A42000000%2C"
     "%22workplace_types%22%3A%5B%5D%2C%22options%22%3A%7B%22flexible_regions%22%3A%5B%22anywhere_in_world%22%5D%7D%7D"
     "%2C%7B%22id%22%3A%22FxY1yZQBoEtHp_8UEq7V%22%2C%22types%22%3A%5B%22country%22%5D%2C"
-    "%22address_components%22%3A%5B%7B%22long_name%22%3A%22United%20States%22%2C%22short_name%22%3A%22US%22%2C"
-    "%22types%22%3A%5B%22country%22%5D%7D%5D%2C%22formatted_address%22%3A%22United%20States%22%2C"
+    "%22address_components%22%3A%5B%7B%22long_name%22%3A%22United+States%22%2C%22short_name%22%3A%22US%22%2C"
+    "%22types%22%3A%5B%22country%22%5D%7D%5D%2C%22formatted_address%22%3A%22United+States%22%2C"
     "%22population%22%3A327167434%2C%22workplace_types%22%3A%5B%5D%2C%22options%22%3A%7B%22flexible_regions%22%3A"
     "%5B%22anywhere_in_continent%22%2C%22anywhere_in_world%22%5D%7D%7D%2C%7B%22id%22%3A%22ehY1yZQBoEtHp_8UEq3V%22%2C"
-    "%22types%22%3A%5B%22country%22%5D%2C%22address_components%22%3A%5B%7B%22long_name%22%3A%22United%20Kingdom%22%2C"
+    "%22types%22%3A%5B%22country%22%5D%2C%22address_components%22%3A%5B%7B%22long_name%22%3A%22United+Kingdom%22%2C"
     "%22short_name%22%3A%22GB%22%2C%22types%22%3A%5B%22country%22%5D%7D%5D%2C%22formatted_address%22%3A"
-    "%22United%20Kingdom%22%2C%22population%22%3A66488991%2C%22workplace_types%22%3A%5B%5D%2C%22options%22%3A"
+    "%22United+Kingdom%22%2C%22population%22%3A66488991%2C%22workplace_types%22%3A%5B%5D%2C%22options%22%3A"
     "%7B%22flexible_regions%22%3A%5B%22anywhere_in_continent%22%2C%22anywhere_in_world%22%5D%7D%7D%2C"
     "%7B%22id%22%3A%222RY1yZQBoEtHp_8UEq3V%22%2C%22types%22%3A%5B%22country%22%5D%2C%22address_components%22%3A"
     "%5B%7B%22long_name%22%3A%22New%20Zealand%22%2C%22short_name%22%3A%22NZ%22%2C%22types%22%3A%5B%22country%22%5D%7D%5D"
@@ -89,6 +89,72 @@ def _extract_from_api_payload(payload: Any) -> List[Dict[str, Any]]:
                 _walk(v, depth + 1)
 
     _walk(payload)
+    return results
+
+
+def _parse_ssr_hits(page_props: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Parse hiring.cafe's ssrHits array from __NEXT_DATA__ pageProps.
+
+    Structure (confirmed from live page):
+      pageProps.ssrHits[].job_information.title
+      pageProps.ssrHits[].v5_processed_job_data.company_name
+      pageProps.ssrHits[].v5_processed_job_data.yearly_min/max_compensation
+      pageProps.ssrHits[].v5_processed_job_data.listed_compensation_currency
+      pageProps.ssrHits[].v5_processed_job_data.formatted_workplace_location
+      pageProps.ssrHits[].apply_url
+    """
+    hits = page_props.get("ssrHits", [])
+    if not hits:
+        return []
+
+    results = []
+    for hit in hits:
+        processed = hit.get("v5_processed_job_data", {})
+        job_info = hit.get("job_information", {})
+
+        title = (job_info.get("title")
+                 or job_info.get("job_title_raw")
+                 or processed.get("title", ""))
+        if not title:
+            continue
+
+        company = (processed.get("company_name")
+                   or hit.get("enriched_company_data", {}).get("name", ""))
+
+        salary_min = processed.get("yearly_min_compensation")
+        salary_max = processed.get("yearly_max_compensation")
+        currency = processed.get("listed_compensation_currency") or "USD"
+
+        if salary_min and salary_max:
+            salary_text = f"{currency} {salary_min}-{salary_max}"
+        elif salary_min:
+            salary_text = f"{currency} {salary_min}"
+        else:
+            salary_text = ""
+
+        location = processed.get("formatted_workplace_location", "")
+        if not location:
+            countries = processed.get("workplace_countries", [])
+            location = ", ".join(countries) if countries else ""
+
+        url = hit.get("apply_url") or hit.get("job_url") or ""
+        posted_raw = processed.get("estimated_publish_date", "")
+
+        description = ""
+        if isinstance(job_info.get("description"), str):
+            description = job_info["description"][:3000]
+
+        results.append({
+            "url": str(url),
+            "title": str(title),
+            "company": str(company),
+            "location": location,
+            "salary_text": salary_text,
+            "description": description,
+            "posted_raw": str(posted_raw),
+        })
+
     return results
 
 
@@ -237,6 +303,47 @@ def _parse_dom_cards(html: str) -> List[Dict[str, Any]]:
     return results
 
 
+def _extract_from_nextjs_data(html: str) -> tuple[List[Dict[str, Any]], int, int]:
+    """
+    Parse the embedded Next.js __NEXT_DATA__ JSON from the page HTML.
+    Returns (jobs, current_page, total_count).
+    """
+    match = re.search(
+        r'<script\s[^>]*id=["\']__NEXT_DATA__["\'][^>]*>\s*(\{.*?\})\s*</script>',
+        html, re.S
+    )
+    if not match:
+        logger.warning("[hiring_cafe] __NEXT_DATA__ script tag not found in HTML")
+        return [], 0, 0
+
+    try:
+        data = json.loads(match.group(1))
+    except json.JSONDecodeError as exc:
+        logger.warning("[hiring_cafe] Failed to parse __NEXT_DATA__ JSON: %s", exc)
+        return [], 0, 0
+
+    page_props = data.get("props", {}).get("pageProps", {})
+    total_count = page_props.get("ssrTotalCount", 0)
+    current_page = page_props.get("ssrPage", 0)
+
+    # hiring.cafe-specific: ssrHits array with nested structure
+    if "ssrHits" in page_props:
+        results = _parse_ssr_hits(page_props)
+        logger.info(
+            "[hiring_cafe] __NEXT_DATA__ ssrHits: %d jobs (page %d of ~%d total)",
+            len(results), current_page,
+            total_count,
+        )
+        return results, current_page, total_count
+
+    # Generic fallback for unknown structures
+    logger.info("[hiring_cafe] ssrHits not found — trying generic walk (keys: %s)",
+                list(page_props.keys())[:10])
+    results = _extract_from_api_payload(data)
+    logger.info("[hiring_cafe] generic extract: %d job-like objects", len(results))
+    return results, current_page, total_count
+
+
 def _parse_date(raw: str) -> Optional[date]:
     if not raw:
         return None
@@ -252,7 +359,7 @@ def _parse_date(raw: str) -> Optional[date]:
     return None
 
 
-async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
+async def _fetch_page(url: str, page_num: int = 0) -> Optional[tuple[str, List[Dict]]]:
     """
     Load the page with Playwright. Returns (html, api_jobs) where api_jobs is
     a list of raw job dicts captured from intercepted API responses.
@@ -371,8 +478,9 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
                 debug_html = await page.content()
                 from pathlib import Path
                 Path("data/cache").mkdir(parents=True, exist_ok=True)
-                Path("data/cache/hiring_cafe_debug.html").write_text(debug_html, encoding="utf-8")
-                logger.info("[hiring_cafe] Debug HTML saved to data/cache/hiring_cafe_debug.html (%d bytes)", len(debug_html))
+                debug_path = f"data/cache/hiring_cafe_debug_p{page_num}.html"
+                Path(debug_path).write_text(debug_html, encoding="utf-8")
+                logger.info("[hiring_cafe] Debug HTML saved to %s (%d bytes)", debug_path, len(debug_html))
 
                 # Wait for job content
                 try:
@@ -426,24 +534,54 @@ async def scrape(
 ) -> List[Listing]:
     listings: List[Listing] = []
     seen_urls: set = set()
+    all_raw_jobs: List[Dict] = []
 
-    result = await _fetch_page(SEARCH_URL)
-    if not result:
-        logger.error("[hiring_cafe] Failed to fetch page — no listings collected")
-        return listings
+    max_pages = 10  # safety cap; updated after first page based on ssrTotalCount
+    page_num = 0
 
-    html, api_jobs = result
+    while page_num < max_pages:
+        page_url = SEARCH_URL if page_num == 0 else f"{SEARCH_URL}&page={page_num}"
+        result = await _fetch_page(page_url, page_num)
+        if not result:
+            logger.error("[hiring_cafe] Page %d failed — stopping", page_num)
+            break
 
-    # Build raw job list: prefer API-intercepted data (richer), fall back to DOM
-    raw_jobs: List[Dict] = []
-    if api_jobs:
-        logger.info("[hiring_cafe] Using %d jobs from API interception", len(api_jobs))
-        raw_jobs = [_normalise_job_dict(j) for j in api_jobs]
-    else:
-        logger.info("[hiring_cafe] API interception yielded nothing — parsing DOM")
-        raw_jobs = _parse_dom_cards(html)
+        html, api_jobs = result
 
-    logger.info("[hiring_cafe] Processing %d raw job entries", len(raw_jobs))
+        # Priority: API interception → __NEXT_DATA__ ssrHits → DOM
+        page_raw: List[Dict] = []
+        if api_jobs:
+            logger.info("[hiring_cafe] Page %d: %d jobs from API interception", page_num, len(api_jobs))
+            page_raw = [_normalise_job_dict(j) for j in api_jobs]
+        else:
+            nextjs_jobs, _, total_count = _extract_from_nextjs_data(html)
+            if nextjs_jobs:
+                page_raw = nextjs_jobs
+                if page_num == 0 and total_count:
+                    page_size = len(nextjs_jobs)
+                    if page_size:
+                        max_pages = min((total_count + page_size - 1) // page_size, 10)
+                        logger.info(
+                            "[hiring_cafe] %d total jobs, page size %d → %d pages to fetch",
+                            total_count, page_size, max_pages,
+                        )
+            else:
+                logger.info("[hiring_cafe] Page %d: trying DOM fallback", page_num)
+                page_raw = _parse_dom_cards(html)
+
+        if not page_raw:
+            logger.warning("[hiring_cafe] Page %d: no jobs found — stopping pagination", page_num)
+            break
+
+        logger.info("[hiring_cafe] Page %d: %d raw jobs", page_num, len(page_raw))
+        all_raw_jobs.extend(page_raw)
+        page_num += 1
+
+        if page_num < max_pages:
+            await asyncio.sleep(REQUEST_DELAY)
+
+    raw_jobs = all_raw_jobs
+    logger.info("[hiring_cafe] Total raw jobs collected across all pages: %d", len(raw_jobs))
 
     for raw in raw_jobs:
         title = raw.get("title", "").strip()
