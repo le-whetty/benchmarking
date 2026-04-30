@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -291,6 +292,16 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
             pass
 
     try:
+        # Read CF clearance from environment — never hardcode
+        cf_clearance = os.environ.get("CF_CLEARANCE", "").strip()
+        if not cf_clearance:
+            logger.warning(
+                "[hiring_cafe] CF_CLEARANCE env var not set. "
+                "Cloudflare will likely block. Set it with your browser cookie:\n"
+                "  export CF_CLEARANCE='<value from hiring.cafe cookies>'\n"
+                "  make scrape SOURCE=hiring_cafe"
+            )
+
         async with async_playwright() as pw:
             browser = await pw.chromium.launch(
                 headless=True,
@@ -300,37 +311,49 @@ async def _fetch_page(url: str) -> Optional[tuple[str, List[Dict]]]:
                     "--disable-dev-shm-usage",
                 ],
             )
+            # Match the exact Chrome version from the user's real browser (Chrome 147 on macOS)
             context = await browser.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/124.0.0.0 Safari/537.36"
+                    "Chrome/147.0.0.0 Safari/537.36"
                 ),
                 viewport={"width": 1440, "height": 900},
                 locale="en-US",
-                timezone_id="America/New_York",
+                timezone_id="Pacific/Auckland",
             )
-            # Remove headless fingerprints that trigger bot detection
             await context.add_init_script("""
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
                 Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
                 Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
                 window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
             """)
+
+            # Inject the real CF clearance cookie from the user's browser session
+            if cf_clearance:
+                await context.add_cookies([{
+                    "name": "cf_clearance",
+                    "value": cf_clearance,
+                    "domain": "hiring.cafe",
+                    "path": "/",
+                    "secure": True,
+                    "sameSite": "None",
+                }])
+                logger.info("[hiring_cafe] CF clearance cookie injected")
+
             page = await context.new_page()
             page.on("response", _on_response)
 
-            # Apply stealth patches — hides automation signals from Cloudflare
             try:
                 try:
-                    from playwright_stealth import stealth_async  # v1.x
+                    from playwright_stealth import stealth_async
                     await stealth_async(page)
                 except (ImportError, AttributeError):
-                    from playwright_stealth import Stealth  # v2.x renamed API
+                    from playwright_stealth import Stealth
                     await Stealth().apply_stealth_async(page)
-                logger.info("[hiring_cafe] Stealth patches applied")
+                logger.debug("[hiring_cafe] Stealth patches applied")
             except Exception as exc:
-                logger.warning("[hiring_cafe] playwright-stealth unavailable (%s) — CF may block", exc)
+                logger.debug("[hiring_cafe] playwright-stealth unavailable: %s", exc)
 
             try:
                 logger.info("[hiring_cafe] Loading search page…")
