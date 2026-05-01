@@ -35,15 +35,15 @@ FX_TO_NZD: Dict[str, float] = {
 }
 
 DEFAULT_BENCHMARKS = {
-    "note": "Edit these with Tracksuit's actual pay bands to improve NZ estimate accuracy.",
+    "note": "Anchors from Tracksuit Function Frameworks (Mar 2026). SWE Altitude 3 (Senior) as mid-market anchor.",
     "nz_anchors": {
-        "software_engineer_mid": 110000,
+        "software_engineer_mid": 145000,
         "product_manager_mid": 120000,
     },
     "market_swe_benchmarks": {
         "US": {"value": 155000, "currency": "USD", "note": "Mid-level SWE base, US market consensus"},
         "UK": {"value": 80000,  "currency": "GBP", "note": "Mid-level SWE base, UK market consensus"},
-        "AU": {"value": 135000, "currency": "AUD", "note": "Mid-level SWE base, AU market consensus"},
+        "AU": {"value": 170000, "currency": "AUD", "note": "Tracksuit Alt 3 Senior Engineer midpoint"},
     },
 }
 

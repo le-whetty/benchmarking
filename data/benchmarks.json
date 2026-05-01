@@ -1,7 +1,7 @@
 {
-  "note": "Edit nz_anchors with Tracksuit's actual pay bands to improve the NZ estimate accuracy. The ratio method uses market_swe_benchmarks to calibrate how RevOps pay compares to engineering pay in each market, then applies that ratio to your NZ SWE anchor.",
+  "note": "Anchors sourced from Tracksuit's Notion Function Frameworks (March 2026). SWE Altitude 3 (Senior Engineer) used as mid-market anchor for the ratio method.",
   "nz_anchors": {
-    "software_engineer_mid": 110000,
+    "software_engineer_mid": 145000,
     "product_manager_mid": 120000
   },
   "market_swe_benchmarks": {
@@ -16,9 +16,9 @@
       "note": "Mid-level SWE base salary, UK market consensus (Glassdoor/Hired ~2024)"
     },
     "AU": {
-      "value": 135000,
+      "value": 170000,
       "currency": "AUD",
-      "note": "Mid-level SWE base salary, AU market consensus (Seek/Glassdoor ~2024)"
+      "note": "Tracksuit Altitude 3 Senior Engineer midpoint (Function Frameworks, Mar 2026)"
     }
   },
   "fx_rates": {
