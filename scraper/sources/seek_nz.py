@@ -52,6 +52,8 @@ SEARCH_QUERIES = [
     "head of sales operations",
     "GTM strategy lead",
     "revenue operations manager",
+    "AI GTM lead",
+    "AI GTM engineer",
 ]
 
 HEADERS = {

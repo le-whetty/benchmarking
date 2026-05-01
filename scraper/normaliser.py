@@ -47,6 +47,12 @@ TITLE_RULES: List[Tuple[re.Pattern, str, float]] = [
     (re.compile(r"\brevops?\s+engineer(ing)?\b", re.I), "manager", 0.80),
     (re.compile(r"\bsales\s+systems?\s+(engineer|architect|admin)\b", re.I), "manager", 0.78),
     (re.compile(r"\bai\s+(sales|gtm|revenue)\s+(engineer|ops|automation)\b", re.I), "manager", 0.78),
+
+    # AI GTM roles — applies AI/automation to the GTM motion (sits under GTM Ops function)
+    (re.compile(r"\b(head|director|vp|lead)\b.*(ai\s+gtm|gtm\s+ai|ai\s+go.?to.?market)", re.I), "head", 0.90),
+    (re.compile(r"\bai\s+gtm\s+(lead|manager|ops|operations|engineer(ing)?)\b", re.I), "head", 0.88),
+    (re.compile(r"\bai\s+gtm\b", re.I), "manager", 0.82),
+    (re.compile(r"\bgtm\s+ai\b", re.I), "manager", 0.82),
 ]
 
 # Patterns that immediately disqualify a title

@@ -45,6 +45,7 @@ SEARCH_URLS = [
     f"{BASE_URL}/jobs?search=sales+operations",
     f"{BASE_URL}/jobs?search=head+of+operations",
     f"{BASE_URL}/jobs?search=director+revenue",
+    f"{BASE_URL}/jobs?search=ai+gtm",
     f"{BASE_URL}/jobs?category=operations",
 ]
 

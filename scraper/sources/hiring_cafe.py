@@ -43,7 +43,7 @@ SEARCH_URL = (
     "https://hiring.cafe/?searchState=%7B%22jobTitleQuery%22%3A%22%5C%22revenue+operations%5C%22%2C"
     "+%5C%22gtm+operations%5C%22%2C+%5C%22revops%5C%22%2C+%5C%22gtm+engineering%5C%22%2C"
     "+%5C%22go+to+market+engineering%5C%22%2C+%5C%22go+to+market+operations%5C%22%2C"
-    "+%5C%22ai+operations%5C%22%22%2C%22dateFetchedPastNDays%22%3A-1%2C%22sortBy%22%3A"
+    "+%5C%22ai+operations%5C%22%2C+%5C%22ai+gtm%5C%22%2C+%5C%22ai+gtm+lead%5C%22%22%2C%22dateFetchedPastNDays%22%3A-1%2C%22sortBy%22%3A"
     "%22compensation_desc%22%2C%22locations%22%3A%5B%7B%22id%22%3A%22LBY1yZQBoEtHp_8UEq3V%22%2C"
     "%22types%22%3A%5B%22continent%22%5D%2C%22address_components%22%3A%5B%7B%22long_name%22%3A"
     "%22Australia%22%2C%22short_name%22%3A%22Australia%22%2C%22types%22%3A%5B%22continent%22%5D%7D%5D"
