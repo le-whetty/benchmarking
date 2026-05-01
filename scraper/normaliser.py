@@ -172,17 +172,60 @@ def extract_city(location: str) -> Optional[str]:
 
 # ── country inference ─────────────────────────────────────────────────────────
 
+# Word-boundary regex patterns. Order matters for multi-country listings:
+# more-specific country names checked first; we prefer NZ > AU > US > UK
+# for the markets we benchmark.
+
+_NZ_PATTERN = re.compile(
+    r"\b(NEW ZEALAND|NZL|"
+    r"AUCKLAND|WELLINGTON|CHRISTCHURCH|HAMILTON|TAURANGA|DUNEDIN|NAPIER|NELSON)\b"
+    r"|,\s*NZ\b",
+)
+
+_AU_PATTERN = re.compile(
+    r"\b(AUSTRALIA|"
+    r"SYDNEY|MELBOURNE|BRISBANE|PERTH|ADELAIDE|CANBERRA|HOBART|GOLD COAST|NEWCASTLE|"
+    r"NEW SOUTH WALES|VICTORIA|QUEENSLAND|WESTERN AUSTRALIA|SOUTH AUSTRALIA|TASMANIA|"
+    r"AUSTRALIAN CAPITAL TERRITORY|NORTHERN TERRITORY|"
+    r"NSW|QLD|VIC|TAS|ACT)\b"
+    r"|,\s*AU\b",
+)
+
+_US_PATTERN = re.compile(
+    r"\b(UNITED STATES|U\.S\.A\.?|USA|"
+    # State names
+    r"CALIFORNIA|TEXAS|FLORIDA|MASSACHUSETTS|COLORADO|ILLINOIS|GEORGIA|VIRGINIA|"
+    r"MICHIGAN|OHIO|ARIZONA|PENNSYLVANIA|TENNESSEE|MINNESOTA|"
+    r"NORTH CAROLINA|SOUTH CAROLINA|NEW JERSEY|NEW YORK|"
+    # Major cities
+    r"SAN FRANCISCO|NEW YORK CITY|AUSTIN|BOSTON|SEATTLE|CHICAGO|DENVER|MIAMI|"
+    r"LOS ANGELES|NASHVILLE|DALLAS|HOUSTON|ATLANTA|MINNEAPOLIS|PORTLAND|"
+    r"PHOENIX|PHILADELPHIA|SAN DIEGO|SAN JOSE|RALEIGH|LAS VEGAS|REDWOOD CITY|"
+    r"AUBURN HILLS|ARLINGTON|MALVERN|LIVINGSTON|VANCOUVER WA|"
+    r"WASHINGTON, ?D\.?C\.?|WASHINGTON DC)\b"
+    r"|,\s*(CA|NY|TX|FL|GA|VA|MA|IL|OH|MI|CO|WA|OR|AZ|NV|UT|MD|NC|SC|TN|KY|MN|PA|NJ|DC)\b",
+)
+
+_UK_PATTERN = re.compile(
+    r"\b(UNITED KINGDOM|GREAT BRITAIN|ENGLAND|SCOTLAND|WALES|"
+    r"LONDON|MANCHESTER|EDINBURGH|BIRMINGHAM|GLASGOW|BRISTOL|LEEDS|"
+    r"LIVERPOOL|SHEFFIELD|CAMBRIDGE|OXFORD)\b"
+    r"|,\s*UK\b|,\s*GB\b",
+)
+
+
 def infer_country(location: str, source: str) -> str:
     loc_upper = location.upper()
-    if any(c in loc_upper for c in ["NEW ZEALAND", "NZ", "NZL"]):
+
+    # Specific country/city/state matches with word boundaries.
+    # Priority: NZ > AU > US > UK (markets we benchmark, NZ-most-relevant first).
+    if _NZ_PATTERN.search(loc_upper):
         return "NZ"
-    if any(c in loc_upper for c in ["AUSTRALIA", "AU", "AUS", "NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"]):
+    if _AU_PATTERN.search(loc_upper):
         return "AU"
-    if any(c in loc_upper for c in ["UNITED STATES", "USA", ", CA", ", NY", ", TX", ", WA", "CALIFORNIA",
-                                     "NEW YORK", "TEXAS", "ILLINOIS", "MASSACHUSETTS", "COLORADO"]):
+    if _US_PATTERN.search(loc_upper):
         return "US"
-    if any(c in loc_upper for c in ["UNITED KINGDOM", "UK", "ENGLAND", "SCOTLAND", "WALES",
-                                     "LONDON", "MANCHESTER", "EDINBURGH", "BIRMINGHAM"]):
+    if _UK_PATTERN.search(loc_upper):
         return "UK"
     if "REMOTE" in loc_upper:
         return "REMOTE"

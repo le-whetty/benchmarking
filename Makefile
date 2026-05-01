@@ -45,12 +45,15 @@ scrape: $(VENV)/bin/activate
 		echo "✓ Analysis copied to web/public/data/analysis.json"; \
 	fi
 
-# Run analysis only (re-reads existing listings.json — no re-scraping)
+# Run analysis only (re-reads existing listings.json — no re-scraping).
+# Also re-runs country inference so any classification fixes flow through
+# to the dashboard without needing a fresh scrape.
 analyse: $(VENV)/bin/activate
 	@echo "▶ Running regional analysis…"
 	$(PYTHON) -m scraper.analysis.regional
+	@cp data/listings.json web/public/data/listings.json
 	@cp data/analysis.json web/public/data/analysis.json
-	@echo "✓ Analysis copied to web/public/data/analysis.json"
+	@echo "✓ Listings + analysis copied to web/public/data/"
 
 # Just copy the seed data (no scraping) — useful for first-run demo
 seed:

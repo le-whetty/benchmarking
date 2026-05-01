@@ -88,6 +88,29 @@ def _compute_stats(values_nzd: List[float], values_local: List[float]) -> Dict[s
     }
 
 
+def _reclassify_countries(listings: List[Dict], listings_path: Path) -> int:
+    """
+    Re-run infer_country on every listing's location. Returns count of fixes.
+    Writes corrected listings back to disk if anything changed so the dashboard
+    sees the fixed data without needing a re-scrape.
+    """
+    from scraper.normaliser import infer_country
+
+    fixed = 0
+    for listing in listings:
+        old = listing.get("country", "")
+        new = infer_country(listing.get("location", ""), listing.get("source", ""))
+        if old != new:
+            listing["country"] = new
+            fixed += 1
+
+    if fixed:
+        listings_path.write_text(json.dumps(listings, indent=2, default=str), encoding="utf-8")
+        logger.info("Re-classified country on %d listings → %s", fixed, listings_path)
+
+    return fixed
+
+
 def analyse(
     listings_path: Path = LISTINGS_FILE,
     benchmarks_path: Path = BENCHMARKS_FILE,
@@ -98,6 +121,9 @@ def analyse(
         raise FileNotFoundError(f"{listings_path} not found — run `make scrape` first")
     listings: List[Dict] = json.loads(listings_path.read_text(encoding="utf-8"))
     logger.info("Loaded %d listings from %s", len(listings), listings_path)
+
+    # Re-run country inference (fixes substring-match bugs in older data)
+    _reclassify_countries(listings, listings_path)
 
     # Load or create benchmarks
     if benchmarks_path.exists():
